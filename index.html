@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My daily prayers</title>
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Prayers">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root {
+    --ink: #251f21;
+    --ink-2: #585254;
+    --ink-4: #c0bebf;
+    --hairline: #eae9ea;
+    --teal: #73a89a;
+    --page: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 28px 20px 40px; }
+  h1 { font-size: 30px; line-height: 36px; font-weight: 600; margin: 0 0 4px; }
+  .today-date { font-size: 17px; font-weight: 600; color: var(--teal); margin: 0 0 12px; }
+  .intro { font-size: 16px; line-height: 24px; color: var(--ink-2); margin: 0 0 20px; }
+  .hero { margin: 0 0 28px; }
+  .hero img { display: block; width: 100%; border-radius: 16px; }
+  h2 { font-size: 22px; line-height: 28px; font-weight: 600; margin: 0 0 12px; }
+  .progress { margin: 0 0 14px; font-size: 22px; line-height: 28px; font-weight: 600; color: var(--teal); }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .prayer {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; min-height: 64px; padding: 14px 18px;
+    border: 1px solid var(--hairline); border-radius: 14px;
+    background: var(--page); cursor: pointer; font: inherit; text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .prayer:active { background: #f7f4f2; }
+  .prayer .name { font-size: 21px; line-height: 26px; font-weight: 600; color: var(--ink); }
+  .prayer .check {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid var(--ink-4); color: #fff; font-size: 20px; font-weight: 600; flex: none;
+  }
+  .prayer.done { border-color: var(--teal); }
+  .prayer.done .check { background: var(--teal); border-color: var(--teal); }
+  .streak { margin: 16px 0 0; font-size: 17px; line-height: 24px; font-weight: 600; color: var(--teal); }
+  .streak.quiet { color: var(--ink-2); font-weight: 400; }
+  .section { margin-bottom: 32px; }
+  .empty { margin: 0; font-size: 16px; line-height: 24px; color: var(--ink-2); }
+  .history-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 0; border-bottom: 1px solid var(--hairline);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-day { font-size: 17px; line-height: 24px; font-weight: 600; }
+  .history-count { font-size: 17px; line-height: 24px; font-weight: 600; color: var(--ink-2); }
+  .history-count.full { color: var(--teal); }
+  .history-left { display: flex; flex-direction: column; gap: 2px; }
+  .history-missed { font-size: 16px; line-height: 22px; color: var(--ink-2); }
+  .history-missed.full { color: var(--teal); font-weight: 600; }
+  footer { font-size: 14px; line-height: 20px; color: var(--ink-2); border-top: 1px solid var(--hairline); padding-top: 16px; }
+  .reset-btn { width: 100%; min-height: 56px; font-size: 18px; font-weight: 600; border-radius: 14px; border: 2px solid #b3261e; background: #fff; color: #b3261e; font-family: inherit; }
+  .reset-box { margin-top: 12px; }
+  .reset-box p { font-size: 18px; line-height: 26px; font-weight: 600; margin: 0 0 12px; }
+  .reset-row { display: flex; gap: 12px; }
+  .reset-row button { flex: 1; min-height: 56px; font-size: 18px; font-weight: 600; border-radius: 14px; font-family: inherit; border: 2px solid #b3261e; }
+  .reset-yes { background: #b3261e; color: #fff; }
+  .reset-no { background: #fff; color: #251f21; border-color: #c0bebf !important; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>My daily prayers</h1>
+  <p class="today-date" id="todayDate"></p>
+  <p class="intro">Tap a prayer when it is done. Your record is saved on this phone only.</p>
+  <figure class="hero"><img src="hero.jpg" alt="Illustration of a mosque at dawn"></figure>
+
+  <section class="section" aria-label="Today">
+    <h2>Today</h2>
+    <p class="progress" id="progress"></p>
+    <div class="list" id="list"></div>
+    <p class="streak" id="streak"></p>
+  </section>
+
+  <section class="section" aria-label="Past days">
+    <h2>Past days</h2>
+    <div id="history"></div>
+  </section>
+
+  <section class="section" aria-label="Reset">
+    <h2>Reset</h2>
+    <button type="button" class="reset-btn" id="resetBtn">Reset everything</button>
+    <div class="reset-box" id="resetBox" hidden>
+      <p>This deletes all your ticks and past days. Are you sure?</p>
+      <div class="reset-row">
+        <button type="button" class="reset-yes" id="resetYes">Yes, delete all</button>
+        <button type="button" class="reset-no" id="resetNo">No, keep</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>Saved on this phone. Nothing is sent anywhere.</footer>
+</div>
+<script>
+(function () {
+  var PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  var KEY = 'prayers.v1';
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.days) return parsed;
+      }
+    } catch (e) {}
+    return { days: {} };
+  }
+
+  function save(state) {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function keyOf(date) {
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    var d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  function dateOf(key) {
+    var parts = key.split('-').map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function labelOf(key) {
+    return dateOf(key).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  function doneCount(record) {
+    if (!record) return 0;
+    return PRAYERS.filter(function (p) { return record[p]; }).length;
+  }
+
+  function streakOf(days, todayKey) {
+    var streak = 0;
+    var cursor = dateOf(todayKey);
+    if (doneCount(days[todayKey]) < PRAYERS.length) cursor.setDate(cursor.getDate() - 1);
+    for (;;) {
+      var key = keyOf(cursor);
+      if (doneCount(days[key]) === PRAYERS.length) {
+        streak += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      } else {
+        return streak;
+      }
+    }
+  }
+
+  var state = load();
+
+  function toggle(prayer) {
+    var todayKey = keyOf(new Date());
+    var record = Object.assign({}, state.days[todayKey] || {});
+    if (record[prayer]) { delete record[prayer]; } else { record[prayer] = true; }
+    state.days[todayKey] = record;
+    save(state);
+    render();
+  }
+
+  function render() {
+    var todayKey = keyOf(new Date());
+    var days = state.days;
+    var today = days[todayKey] || {};
+    var doneToday = doneCount(today);
+    var streak = streakOf(days, todayKey);
+
+    document.getElementById('todayDate').textContent =
+      new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    document.getElementById('progress').textContent = doneToday + ' of 5 done';
+
+    var list = document.getElementById('list');
+    list.innerHTML = '';
+    PRAYERS.forEach(function (prayer) {
+      var done = Boolean(today[prayer]);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prayer' + (done ? ' done' : '');
+      btn.setAttribute('aria-pressed', done ? 'true' : 'false');
+      var name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = prayer;
+      var check = document.createElement('span');
+      check.className = 'check';
+      check.setAttribute('aria-hidden', 'true');
+      check.textContent = done ? '\u2713' : '';
+      btn.appendChild(name);
+      btn.appendChild(check);
+      btn.addEventListener('click', function () { toggle(prayer); });
+      list.appendChild(btn);
+    });
+
+    var streakEl = document.getElementById('streak');
+    if (streak > 0) {
+      streakEl.className = 'streak';
+      streakEl.textContent = streak + (streak === 1 ? ' day' : ' days') + ' in a row, all 5 done';
+    } else {
+      streakEl.className = 'streak quiet';
+      streakEl.textContent = 'Finish all 5 today to start a streak';
+    }
+
+    var history = document.getElementById('history');
+    history.innerHTML = '';
+    var rows = [];
+    for (var back = 1; back <= 30 && rows.length < 14; back++) {
+      var day = dateOf(todayKey);
+      day.setDate(day.getDate() - back);
+      var key = keyOf(day);
+      if (days[key]) rows.push(key);
+    }
+    if (rows.length === 0) {
+      var empty = document.createElement('p');
+      empty.className = 'empty';
+      empty.textContent = 'Nothing yet. Days you record will show here.';
+      history.appendChild(empty);
+    } else {
+      rows.forEach(function (key) {
+        var record = days[key];
+        var count = doneCount(record);
+        var missed = PRAYERS.filter(function (p) { return !record[p]; });
+        var row = document.createElement('div');
+        row.className = 'history-row';
+        var left = document.createElement('div');
+        left.className = 'history-left';
+        var dayEl = document.createElement('span');
+        dayEl.className = 'history-day';
+        dayEl.textContent = labelOf(key);
+        left.appendChild(dayEl);
+        var missedEl = document.createElement('span');
+        missedEl.className = 'history-missed' + (missed.length === 0 ? ' full' : '');
+        missedEl.textContent = missed.length === 0 ? 'All 5 done' : 'Missed: ' + missed.join(', ');
+        left.appendChild(missedEl);
+        var countEl = document.createElement('span');
+        countEl.className = 'history-count' + (count === PRAYERS.length ? ' full' : '');
+        countEl.textContent = count + ' of 5';
+        row.appendChild(left);
+        row.appendChild(countEl);
+        history.appendChild(row);
+      });
+    }
+  }
+
+  render();
+
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    document.getElementById('resetBox').hidden = false;
+    this.hidden = true;
+  });
+  document.getElementById('resetNo').addEventListener('click', function () {
+    document.getElementById('resetBox').hidden = true;
+    document.getElementById('resetBtn').hidden = false;
+  });
+  document.getElementById('resetYes').addEventListener('click', function () {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = load();
+    document.getElementById('resetBox').hidden = true;
+    document.getElementById('resetBtn').hidden = false;
+    render();
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>
